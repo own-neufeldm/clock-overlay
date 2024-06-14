@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=70.0", "setuptools_scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clock-overlay"
+description = "Clock overlay for desktops."
+readme = "README.md"
+authors = [{ name = "Martin Neufeld" }]
+dynamic = ["version"]
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.scripts]
+clock-overlay = "clock.main:main"
+
+[project.urls]
+"Homepage" = "https://github.com/own-neufeldm/clock-overlay"
+"Bug Tracker" = "https://github.com/own-neufeldm/clock-overlay/issues"
+
+[tool.setuptools]
+py-modules = ["clock"]
+
+[tool.setuptools_scm]
+# can be empty if no extra settings are needed, presence enables setuptools_scm

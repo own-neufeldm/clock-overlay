@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# python
+__pycache__
+*.egg-info
+.venv
+build
+dist
