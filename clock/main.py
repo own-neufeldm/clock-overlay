@@ -32,7 +32,7 @@ class App(tk.Tk):
         return None
 
     def _reset_position(self, event: tk.Event | None = None) -> None:
-        x, y = self.winfo_screenwidth() - 49, 0
+        x, y = self.winfo_screenwidth() - 54, 5
         self.geometry(f"+{x}+{y}")
         return None
 
