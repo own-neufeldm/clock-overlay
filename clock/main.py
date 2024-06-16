@@ -11,7 +11,6 @@ class App(tk.Tk):
         self.resizable(False, False)
         self.clock = ttk.Label(self, background="black", foreground="lime", font="Consolas")
         self.clock.grid(column=0, row=0)
-        self.clock.after(1000, self._draw_time)
 
         self.init_x, self.init_y = 0, 0
         self.bind("<ButtonPress-1>", self._save_position)
@@ -25,6 +24,7 @@ class App(tk.Tk):
 
     def _draw_time(self) -> None:
         self.clock.configure(text=time.strftime("%H:%M"))
+        self.clock.after(60000, self._draw_time)
         return None
 
     def _save_position(self, event: tk.Event) -> None:
