@@ -4,53 +4,40 @@ Clock overlay for desktops.
 
 ## Requirements
 
-This application requires [Python v3.12](https://www.python.org/downloads/) and
-[Poetry](https://python-poetry.org/) with its
-[Dynamic Versioning plugin](https://github.com/mtkennerly/poetry-dynamic-versioning) to be
-installed. To follow the [setup](#Setup) guide step by step, you will also need
-[PowerShell 7](https://github.com/PowerShell/PowerShell).
+The following dependencies must already be installed on your system:
 
-The app was developed on and for Windows 10 (x64), though other common operating systems are
-probably supported too (not tested).
+| Dependency                                  | Version |
+| ------------------------------------------- | ------- |
+| [python](https://www.python.org/downloads/) | ^3.12   |
+| [pipx](https://pipx.pypa.io/stable/)        | ^1.6    |
+
+This app was written on and for Windows 10 (x64). It may work on other operating systems but it is
+not officially supported.
 
 ## Setup
 
-Assuming your environment meets the requirements stated above, you can install the app like so:
+Install the app using `pipx`, e.g. directly from GitHub using SSH:
 
 ```
-$ poetry install
+$ pipx install git+ssh://git@github.com/own-neufeldm/clock-overlay.git
 
-Installing dependencies from lock file
-Installing the current project: clock (1.0.2)
+  installed package clock 1.0.3, installed using Python 3.12.5
+  These apps are now globally available
+    - clock-overlay.exe
+done! ✨ 🌟 ✨
 ```
 
-The app is now installed in a virtual environment and can be run using `poetry run clock-overlay`.
-To make `clock-overlay` available outside the virtual environment, you can create a function in your
-user profile (`$Profile`), e.g.:
+You can now run the app using `clock-overlay`.
 
-```
-function clock-overlay() {
-    $Scripts = "POETRY_PATH\Scripts"
+Additionally, you can configure a shortcut to run the app from your Start Menu without opening a
+Terminal first. To do so, create a shortcut named `Clock Overlay` in the
+`C:\ProgramData\Microsoft\Windows\Start Menu\Programs` directory. Point it to the following target:
+`pwsh.exe -w hidden -c clock-overlay`. You can use [this asset](./clock/assets/icon.ico) as icon.
 
-    & "$Scripts\pythonw.exe" "$Scripts\clock-overlay" $args
-}
-```
+> [!NOTE]
+> If you do not have PowerShell 7 (`pwsh`) installed, use `powershell.exe` instead.
 
-Replace `POETRY_PATH` with the actual path of your poetry environment (`poetry env info -p`). You
-have to reload your shell or source the user profile for the function to be recognized, e.g.:
-
-```
-$ . $Profile
-```
-
-You can now run the app simply by running `clock-overlay`.
-
-Furthermore, you can add a shortcut to your Start Menu so the app can be run from there. Do so by
-creating a directory, e.g. `Clock Overlay`, in your Start Menu path
-`$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs`. Within your new directory, create a
-shortcut, e.g. `Clock Overlay`, to the following target:
-`"C:\Program Files\PowerShell\7\pwsh.exe" -c clock-overlay`. You can set the
-[icon from this repository](./clock/assets/icon.ico) as the shortcut icon.
+You can now run the app from your Start Menu using `Clock Overlay`.
 
 ## Usage
 
