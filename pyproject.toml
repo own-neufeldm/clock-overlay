@@ -1,30 +1,20 @@
 [build-system]
-requires = ["setuptools>=70.0", "setuptools_scm>=8.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
-[project]
-name = "clock-overlay"
+[tool.poetry]
+name = "clock"
+version = "0.0.0"
 description = "Clock overlay for desktops."
+authors = ["Martin Neufeld <m.neufeld946@gmail.com>"]
+license = "MIT"
 readme = "README.md"
-authors = [{ name = "Martin Neufeld" }]
-dynamic = ["version"]
-requires-python = ">=3.12"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-dependencies = []
 
-[project.scripts]
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.scripts]
 clock-overlay = "clock.main:main"
 
-[project.urls]
-"Homepage" = "https://github.com/own-neufeldm/clock-overlay"
-"Bug Tracker" = "https://github.com/own-neufeldm/clock-overlay/issues"
-
-[tool.setuptools]
-py-modules = ["clock"]
-
-[tool.setuptools_scm]
-# can be empty if no extra settings are needed, presence enables setuptools_scm
+[tool.poetry-dynamic-versioning]
+enable = true
