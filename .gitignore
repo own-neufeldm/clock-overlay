@@ -1,10 +1,2 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# python
-__pycache__
-
 # editor
 .vscode
