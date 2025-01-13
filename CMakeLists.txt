@@ -1,3 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
 project(clock-overlay)
+add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_executable(clock-overlay src/main.c)
+target_link_libraries(clock-overlay PRIVATE SDL3::SDL3)
