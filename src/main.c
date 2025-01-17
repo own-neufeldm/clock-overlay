@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // using this ID will crash the programm, even though it is '1' when printed
+  // TODO: using this function will later cause SDL_PollEvent to crash
   //
   // SDL_DisplayID displayId = SDL_GetDisplayForWindow(window);
   // if (displayId == 0) {
