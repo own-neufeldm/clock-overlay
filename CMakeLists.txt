@@ -1,7 +1,7 @@
 # define project
 cmake_minimum_required(VERSION 3.31)
 project(clock-overlay)
-add_executable(clock-overlay WIN32 src/main.c)
+add_executable(clock-overlay src/main.c)
 
 # link SDL dependencies
 set(SDLTTF_VENDORED ON)
