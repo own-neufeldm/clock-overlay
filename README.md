@@ -2,6 +2,13 @@
 
 Clock overlay for desktops.
 
+## Working with submodules
+
+* add a submodule in current directory: `git submodule add <url>`
+* initialize all submodules recursively: `git submodule update --init --recursive --remote --merge`
+* update all submodules recursively: `git submodule update --recursive --remote --merge`
+* remove a submodule: follow [instructions](https://stackoverflow.com/questions/1260748/how-do-i-remove-a-submodule) as befits needs
+
 ## Requirements
 
 tbc
