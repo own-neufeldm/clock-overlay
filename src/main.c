@@ -28,7 +28,6 @@ typedef struct {
 
   unsigned int currentTime;
   unsigned int lastTime;
-  SDL_Surface *textSurface;
   SDL_Texture *textTexture;
 } AppState;
 
@@ -76,9 +75,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_Point displaySize = {displayMode->w, displayMode->h};
 
   // set window properties
-  state->originWindowPosition = (SDL_Point){100, 100};
+  SDL_Point size = {400, 200};
+  SDL_Point position = {
+      (displaySize.x - size.x) / 2,
+      (displaySize.y - size.y) / 2,
+  };
+  state->originWindowPosition = position;
   state->currentWindowPosition = state->originWindowPosition;
-  state->originWindowSize = (SDL_Point){100, 100};
+  state->originWindowSize = size;
   state->currentWindowSize = state->originWindowSize;
   state->originWindowOpacity = 0.5f;
   state->currentWindowOpacity = state->originWindowOpacity;
@@ -238,18 +242,22 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     strftime(text, length, "%H:%M:%S", localtime(&now));
 
     // render text to surface
-    SDL_Color color = {.r = 255, .g = 255, .b = 255, .a = 255};
-    state->textSurface = TTF_RenderText_Solid(state->font, text, length, color);
-    if (state->textSurface == NULL) {
+    SDL_Color color = {.r = 255, .g = 255, .b = 255};
+    SDL_Surface *textSurface =
+        TTF_RenderText_Solid(state->font, text, length, color);
+    if (textSurface == NULL) {
       return SDL_APP_FAILURE;
     }
 
     // convert surface to texture
     state->textTexture =
-        SDL_CreateTextureFromSurface(state->renderer, state->textSurface);
+        SDL_CreateTextureFromSurface(state->renderer, textSurface);
     if (state->textTexture == NULL) {
       return SDL_APP_FAILURE;
     }
+
+    // free temporary resources
+    SDL_DestroySurface(textSurface);
   }
 
   // write texture to buffer
