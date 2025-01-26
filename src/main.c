@@ -12,7 +12,7 @@
  * Application state for passing data throughout callbacks.
  *
  * \param window main window.
- * \param renderer default renderer for the main window.
+ * \param renderer default renderer.
  * \param font font used for rendering text.
  * \param changingWindowPosition is the window being dragged by the user?
  * \param startChangeMousePosition mouse position before user started dragging.
@@ -49,7 +49,7 @@ typedef struct {
 } AppState;
 
 /**
- * Creates the main window.
+ * Creates the main window, borderless and always on top of other applications.
  *
  * \param state the application state.
  *
@@ -66,7 +66,7 @@ bool createWindow(AppState *state) {
 }
 
 /**
- * Creates the default renderer for the main window.
+ * Creates the default renderer, driver chosen by SDL based on your system.
  *
  * \param state the application state.
  *
@@ -97,17 +97,16 @@ bool openFont(AppState *state) {
 }
 
 /**
- * Sets text properties such as foreground color, format and length.
+ * Sets text properties such as foreground color, time format and buffer length.
+ *
+ * Time will be displayed as `[00-23 hours]:[00-60 minutes]`, e.g. `22:16`.
  *
  * \param state the application state.
- *
- * \returns A boolean value indicating success or failure.
  */
-bool setTextProperties(AppState *state) {
+void setTextProperties(AppState *state) {
   state->textColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
   state->textFormat = "%H:%M:%S";
   state->textLength = 9;  // HH:MM:SS\0
-  return true;
 }
 
 /**
@@ -118,6 +117,7 @@ bool setTextProperties(AppState *state) {
  * \returns A boolean value indicating success or failure.
  */
 bool setWindowProperties(AppState *state) {
+  // set target size to be as small as possible, merely contain text
   TTF_Font *font = state->font;
   const char *text = "88:88:88";
   size_t length = state->textLength;
@@ -127,6 +127,7 @@ bool setWindowProperties(AppState *state) {
     return false;
   }
 
+  // retrieve display where main window exists
   SDL_Window *window = state->window;
   SDL_DisplayID displayID = SDL_GetDisplayForWindow(window);
   const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayID);
@@ -134,9 +135,12 @@ bool setWindowProperties(AppState *state) {
     return false;
   }
 
+  // set target position to upper-right corner
   state->originWindowGeometry.x = displayMode->w - *w - 10;
   state->originWindowGeometry.y = 10;
   state->currentWindowGeometry = state->originWindowGeometry;
+
+  // set target opacity to slightly translucent
   state->originWindowOpacity = 0.8f;
   state->currentWindowOpacity = state->originWindowOpacity;
   return true;
@@ -169,10 +173,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  if (!setTextProperties(state)) {
-    return SDL_APP_FAILURE;
-  }
-
+  setTextProperties(state);
   if (!setWindowProperties(state)) {
     return SDL_APP_FAILURE;
   }
@@ -361,11 +362,11 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     fprintf(stderr, "[ERROR] %s\n", SDL_GetError());
   }
 
-  // free memory and quit TTF system
+  // free TTF resources and quit system
   TTF_CloseFont(state->font);
   TTF_Quit();
 
-  // free memory and quit SDL system
+  // free SDL resources and quit system
   SDL_DestroyTexture(state->textTexture);
   SDL_DestroyRenderer(state->renderer);
   SDL_DestroyWindow(state->window);
