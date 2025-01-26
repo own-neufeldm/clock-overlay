@@ -88,10 +88,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->textLength = 9;  // HH:MM:SS\0
 
   // calculate the minimal window size for our text
-  SDL_Point size = {};
+  SDL_Rect geometry = {};
   const char *string = "88:88:88";
-  if (!TTF_GetStringSize(state->font, string, state->textLength, &(size.x),
-                         &(size.y))) {
+  if (!TTF_GetStringSize(state->font, string, state->textLength, &(geometry.w),
+                         &(geometry.h))) {
     return SDL_APP_FAILURE;
   }
 
@@ -101,15 +101,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   if (displayMode == NULL) {
     return SDL_APP_FAILURE;
   }
-  SDL_Point position = {displayMode->w - size.x - 10, 10};
+  geometry.x = displayMode->w - geometry.w - 10;
+  geometry.y = 10;
 
   // set window properties
-  state->originWindowGeometry = (SDL_Rect){
-      .x = position.x,
-      .y = position.y,
-      .w = size.x,
-      .h = size.y,
-  };
+  state->originWindowGeometry = geometry;
   state->currentWindowGeometry = state->originWindowGeometry;
   state->originWindowOpacity = 0.8f;
   state->currentWindowOpacity = state->originWindowOpacity;
