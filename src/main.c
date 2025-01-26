@@ -108,7 +108,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       return SDL_APP_SUCCESS;
       break;
 
-    // a key was pressed
     case SDL_EVENT_KEY_DOWN:
       switch (event->key.key) {
         // user wants to change the window size
@@ -125,7 +124,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
-    // a key was released
     case SDL_EVENT_KEY_UP:
       switch (event->key.key) {
         // user finished changing the window size
@@ -142,7 +140,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
-    // a mouse button was pressed
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
       switch (event->button.button) {
         // user wants to change the window position (drag)
@@ -154,7 +151,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
-    // a mouse button was released
     case SDL_EVENT_MOUSE_BUTTON_UP:
       switch (event->button.button) {
         // user finished changing the window position (drag)
@@ -180,7 +176,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
-    // the mouse was moved
     case SDL_EVENT_MOUSE_MOTION:
       // user wants to change the window position (drag)
       if (state->changingWindowPosition) {
@@ -193,7 +188,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
-    // the mouse wheel was moved
     case SDL_EVENT_MOUSE_WHEEL:
       // user wants to change the window size
       if (state->changingWindowSize) {
