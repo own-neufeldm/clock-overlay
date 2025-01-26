@@ -8,7 +8,25 @@
 #include <time.h>
 #include <unistd.h>
 
-// contains application data to avoid global variables
+/**
+ * Application state for passing data throughout callbacks.
+ *
+ * \param window main window.
+ * \param renderer default renderer for the main window.
+ * \param font font used for rendering text.
+ * \param changingWindowPosition is the window being dragged by the user?
+ * \param startChangeMousePosition mouse position before user started dragging.
+ * \param originWindowGeometry default size and position of the window.
+ * \param currentWindowGeometry current size and position of the window.
+ * \param changingWindowOpacity is the user changing the windows opacity?
+ * \param originWindowOpacity default opacity of the window.
+ * \param currentWindowOpacity current opacity of the window.
+ * \param lastUpdate milliseconds since the text was last updated.
+ * \param textColor foreground color to use when rendering text.
+ * \param textFormat format to apply to time when constructing text.
+ * \param textLength buffer length to use when constructing text.
+ * \param textTexture texture of text to render each frame.
+ */
 typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -23,92 +41,141 @@ typedef struct {
   float originWindowOpacity;
   float currentWindowOpacity;
 
-  unsigned int currentTime;
-  unsigned int lastTime;
+  Uint64 lastUpdate;
   SDL_Color textColor;
   const char *textFormat;
   size_t textLength;
   SDL_Texture *textTexture;
 } AppState;
 
+/**
+ * Creates the main window.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool createWindow(AppState *state) {
+  const char *title = NULL;
+  int w = 0;
+  int h = 0;
+  SDL_WindowFlags flags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+
+  state->window = SDL_CreateWindow(title, w, h, flags);
+  return state->window != NULL;
+}
+
+/**
+ * Creates the default renderer for the main window.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool createRenderer(AppState *state) {
+  SDL_Window *window = state->window;
+  const char *name = NULL;
+
+  state->renderer = SDL_CreateRenderer(window, name);
+  return state->renderer != NULL;
+}
+
+/**
+ * Opens the font used for rendering text.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool openFont(AppState *state) {
+  // TODO: create own font or use something with MIT license
+  const char *file = "assets/Roboto/static/Roboto-Regular.ttf";
+  int ptsize = 12;
+
+  state->font = TTF_OpenFont(file, ptsize);
+  return state->font != NULL;
+}
+
+/**
+ * Sets text properties such as foreground color, format and length.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool setTextProperties(AppState *state) {
+  state->textColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
+  state->textFormat = "%H:%M:%S";
+  state->textLength = 9;  // HH:MM:SS\0
+  return true;
+}
+
+/**
+ * Sets window properties such as size, position and opacity.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool setWindowProperties(AppState *state) {
+  TTF_Font *font = state->font;
+  const char *text = "88:88:88";
+  size_t length = state->textLength;
+  int *w = &(state->originWindowGeometry.w);
+  int *h = &(state->originWindowGeometry.h);
+  if (!TTF_GetStringSize(font, text, length, w, h)) {
+    return false;
+  }
+
+  SDL_Window *window = state->window;
+  SDL_DisplayID displayID = SDL_GetDisplayForWindow(window);
+  const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayID);
+  if (displayMode == NULL) {
+    return false;
+  }
+
+  state->originWindowGeometry.x = displayMode->w - *w - 10;
+  state->originWindowGeometry.y = 10;
+  state->currentWindowGeometry = state->originWindowGeometry;
+  state->originWindowOpacity = 0.8f;
+  state->currentWindowOpacity = state->originWindowOpacity;
+  return true;
+}
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  // create application state to share data throughout SDL callbacks
   AppState *state = SDL_calloc(1, sizeof(AppState));
   if (state == NULL) {
     return SDL_APP_FAILURE;
   }
   *appstate = state;
 
-  // initialize SDL system, we only need video
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     return SDL_APP_FAILURE;
   }
 
-  // initialize TTF system
   if (!TTF_Init()) {
     return SDL_APP_FAILURE;
   }
 
-  // create main window
-  const char *title = NULL;
-  int width = 0;
-  int height = 0;
-  SDL_WindowFlags flags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
-  state->window = SDL_CreateWindow(title, width, height, flags);
-  if (state->window == NULL) {
+  if (!createWindow(state)) {
     return SDL_APP_FAILURE;
   }
 
-  // create default renderer
-  const char *name = NULL;
-  state->renderer = SDL_CreateRenderer(state->window, name);
-  if (state->renderer == NULL) {
+  if (!createRenderer(state)) {
     return SDL_APP_FAILURE;
   }
 
-  // set render draw color, e.g. when resetting the buffer
-  SDL_Color color = {.r = 0, .g = 0, .b = 0, .a = 255};
-  if (!SDL_SetRenderDrawColor(state->renderer, color.r, color.g, color.b,
-                              color.a)) {
+  if (!openFont(state)) {
     return SDL_APP_FAILURE;
   }
 
-  // TODO: create own font or use something with MIT license
-  // open font
-  const char *file = "assets/Roboto/static/Roboto-Regular.ttf";
-  int ptsize = 12;
-  state->font = TTF_OpenFont(file, ptsize);
-  if (state->font == NULL) {
+  if (!setTextProperties(state)) {
     return SDL_APP_FAILURE;
   }
 
-  // configure text formatting options
-  state->textColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
-  state->textFormat = "%H:%M:%S";
-  state->textLength = 9;  // HH:MM:SS\0
-
-  // calculate the minimal window size for our text
-  SDL_Rect geometry = {};
-  const char *string = "88:88:88";
-  if (!TTF_GetStringSize(state->font, string, state->textLength, &(geometry.w),
-                         &(geometry.h))) {
+  if (!setWindowProperties(state)) {
     return SDL_APP_FAILURE;
   }
-
-  // calculate the window position in the upper-right corner of the display
-  SDL_DisplayID displayId = SDL_GetDisplayForWindow(state->window);
-  const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayId);
-  if (displayMode == NULL) {
-    return SDL_APP_FAILURE;
-  }
-  geometry.x = displayMode->w - geometry.w - 10;
-  geometry.y = 10;
-
-  // set window properties
-  state->originWindowGeometry = geometry;
-  state->currentWindowGeometry = state->originWindowGeometry;
-  state->originWindowOpacity = 0.8f;
-  state->currentWindowOpacity = state->originWindowOpacity;
 
   return SDL_APP_CONTINUE;
 }
@@ -243,9 +310,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   }
 
   // update text every 1 second(s)
-  state->currentTime = SDL_GetTicks();
-  if (state->lastTime == 0 || state->currentTime - state->lastTime > 1000) {
-    state->lastTime = state->currentTime;
+  Uint64 currentUpdate = SDL_GetTicks();
+  if (state->lastUpdate == 0 || currentUpdate - state->lastUpdate > 1000) {
+    state->lastUpdate = currentUpdate;
 
     // format new time
     time_t now = time(NULL);
