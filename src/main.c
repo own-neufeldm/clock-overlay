@@ -19,6 +19,7 @@ typedef struct {
   SDL_Point originWindowPosition;
   SDL_Point currentWindowPosition;
 
+  // TODO: either remove or fix scaling, somehow aspect ratio is lost
   bool changingWindowSize;
   SDL_Point originWindowSize;
   SDL_Point currentWindowSize;
@@ -29,6 +30,9 @@ typedef struct {
 
   unsigned int currentTime;
   unsigned int lastTime;
+  SDL_Color textColor;
+  const char *textFormat;
+  size_t textLength;
   SDL_Texture *textTexture;
 } AppState;
 
@@ -51,7 +55,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
 
   // create main window
-  char *title = NULL;
+  const char *title = NULL;
   int width = 0;
   int height = 0;
   SDL_WindowFlags flags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
@@ -61,39 +65,55 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
 
   // create default renderer
-  char *name = NULL;
+  const char *name = NULL;
   state->renderer = SDL_CreateRenderer(state->window, name);
   if (state->renderer == NULL) {
     return SDL_APP_FAILURE;
   }
 
+  // set render draw color, e.g. when resetting the buffer
+  SDL_Color color = {.r = 0, .g = 0, .b = 0, .a = 255};
+  if (!SDL_SetRenderDrawColor(state->renderer, color.r, color.g, color.b,
+                              color.a)) {
+    return SDL_APP_FAILURE;
+  }
+
   // TODO: create own font or use something with MIT license
   // open font
-  char *file = "assets/Roboto/static/Roboto-Regular.ttf";
-  int ptsize = 72;
+  const char *file = "assets/Roboto/static/Roboto-Regular.ttf";
+  int ptsize = 12;
   state->font = TTF_OpenFont(file, ptsize);
   if (state->font == NULL) {
     return SDL_APP_FAILURE;
   }
 
-  // get the handle of the display on which our main window was created
+  // configure text formatting options
+  state->textColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
+  state->textFormat = "%H:%M:%S";
+  state->textLength = 9;  // HH:MM:SS\0
+
+  // calculate the minimal window size for our text
+  SDL_Point size = {};
+  const char *string = "88:88:88";
+  if (!TTF_GetStringSize(state->font, string, state->textLength, &(size.x),
+                         &(size.y))) {
+    return SDL_APP_FAILURE;
+  }
+
+  // calculate the window position in the upper-right corner of the display
   SDL_DisplayID displayId = SDL_GetDisplayForWindow(state->window);
   const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayId);
   if (displayMode == NULL) {
     return SDL_APP_FAILURE;
   }
+  SDL_Point position = {displayMode->w - size.x - 10, 10};
 
   // set window properties
-  SDL_Point size = {400, 200};
-  SDL_Point position = {
-      (displayMode->w - size.x) / 2,
-      (displayMode->h - size.y) / 2,
-  };
   state->originWindowPosition = position;
   state->currentWindowPosition = state->originWindowPosition;
   state->originWindowSize = size;
   state->currentWindowSize = state->originWindowSize;
-  state->originWindowOpacity = 0.5f;
+  state->originWindowOpacity = 0.8f;
   state->currentWindowOpacity = state->originWindowOpacity;
 
   return SDL_APP_CONTINUE;
@@ -103,7 +123,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   AppState *state = (AppState *)appstate;
 
   switch (event->type) {
-    // application process was terminated regularly
+    // application process was terminated
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
       break;
@@ -261,14 +281,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
     // format new time
     time_t now = time(NULL);
-    size_t length = 9;  // HH:MM:SS\0
-    char text[length];
-    strftime(text, length, "%H:%M:%S", localtime(&now));
+    char text[state->textLength];
+    strftime(text, state->textLength, state->textFormat, localtime(&now));
 
     // render text to surface
-    SDL_Color color = {.r = 255, .g = 255, .b = 255};
-    SDL_Surface *textSurface =
-        TTF_RenderText_Solid(state->font, text, length, color);
+    SDL_Surface *textSurface = TTF_RenderText_Solid(
+        state->font, text, state->textLength, state->textColor);
     if (textSurface == NULL) {
       return SDL_APP_FAILURE;
     }
