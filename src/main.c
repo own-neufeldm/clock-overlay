@@ -8,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
+// contains application data to avoid global variables
 typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -32,53 +33,61 @@ typedef struct {
 } AppState;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  // create application state
+  // create application state to share data throughout SDL callbacks
   AppState *state = SDL_calloc(1, sizeof(AppState));
   if (state == NULL) {
     return SDL_APP_FAILURE;
   }
   *appstate = state;
 
-  // initialize SDL system
-  if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
+  // initialize SDL system, we only need video
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
     return SDL_APP_FAILURE;
   }
 
-  // create window and renderer
+  // initialize TTF system
+  if (!TTF_Init()) {
+    return SDL_APP_FAILURE;
+  }
+
+  // create main window
   char *title = NULL;
   int width = 0;
   int height = 0;
   SDL_WindowFlags flags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
-  SDL_CreateWindowAndRenderer(title, width, height, flags, &(state->window),
-                              &(state->renderer));
-  if (state->window == NULL || state->renderer == NULL) {
-    return SDL_APP_FAILURE;
-  }
-  if (SDL_GetWindowSurface(state->window) == NULL) {
+  state->window = SDL_CreateWindow(title, width, height, flags);
+  if (state->window == NULL) {
     return SDL_APP_FAILURE;
   }
 
+  // create default renderer
+  char *name = NULL;
+  state->renderer = SDL_CreateRenderer(state->window, name);
+  if (state->renderer == NULL) {
+    return SDL_APP_FAILURE;
+  }
+
+  // TODO: create own font or use something with MIT license
   // open font
-  char *fontFile = "assets/Roboto/static/Roboto-Regular.ttf";
-  int fontSize = 72;
-  state->font = TTF_OpenFont(fontFile, fontSize);
+  char *file = "assets/Roboto/static/Roboto-Regular.ttf";
+  int ptsize = 72;
+  state->font = TTF_OpenFont(file, ptsize);
   if (state->font == NULL) {
     return SDL_APP_FAILURE;
   }
 
-  // get display size
+  // get the handle of the display on which our main window was created
   SDL_DisplayID displayId = SDL_GetDisplayForWindow(state->window);
   const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayId);
   if (displayMode == NULL) {
     return SDL_APP_FAILURE;
   }
-  SDL_Point displaySize = {displayMode->w, displayMode->h};
 
   // set window properties
   SDL_Point size = {400, 200};
   SDL_Point position = {
-      (displaySize.x - size.x) / 2,
-      (displaySize.y - size.y) / 2,
+      (displayMode->w - size.x) / 2,
+      (displayMode->h - size.y) / 2,
   };
   state->originWindowPosition = position;
   state->currentWindowPosition = state->originWindowPosition;
@@ -94,17 +103,21 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   AppState *state = (AppState *)appstate;
 
   switch (event->type) {
+    // application process was terminated regularly
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
       break;
 
+    // a key was pressed
     case SDL_EVENT_KEY_DOWN:
       switch (event->key.key) {
+        // user wants to change the window size
         case SDLK_LCTRL:
         case SDLK_RCTRL:
           state->changingWindowSize = true;
           break;
 
+        // user wants to change the window opacity
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
           state->changingWindowOpacity = true;
@@ -112,13 +125,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
+    // a key was released
     case SDL_EVENT_KEY_UP:
       switch (event->key.key) {
+        // user finished changing the window size
         case SDLK_LCTRL:
         case SDLK_RCTRL:
           state->changingWindowSize = false;
           break;
 
+        // user finished changing the window opacity
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
           state->changingWindowOpacity = false;
@@ -126,8 +142,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
+    // a mouse button was pressed
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
       switch (event->button.button) {
+        // user wants to change the window position (drag)
         case SDL_BUTTON_LEFT:
           state->changingWindowPosition = true;
           SDL_Point mousePosition = {event->motion.x, event->motion.y};
@@ -136,16 +154,20 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
+    // a mouse button was released
     case SDL_EVENT_MOUSE_BUTTON_UP:
       switch (event->button.button) {
+        // user finished changing the window position (drag)
         case SDL_BUTTON_LEFT:
           state->changingWindowPosition = false;
           break;
 
+        // user wants to quit the application
         case SDL_BUTTON_MIDDLE:
           return SDL_APP_SUCCESS;
           break;
 
+        // user wants to reset a window property to its default value
         case SDL_BUTTON_RIGHT:
           if (state->changingWindowSize) {
             state->currentWindowSize = state->originWindowSize;
@@ -158,7 +180,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
+    // the mouse was moved
     case SDL_EVENT_MOUSE_MOTION:
+      // user wants to change the window position (drag)
       if (state->changingWindowPosition) {
         SDL_Point offset = {
             event->motion.x - state->startChangeMousePosition.x,
@@ -169,7 +193,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       }
       break;
 
+    // the mouse wheel was moved
     case SDL_EVENT_MOUSE_WHEEL:
+      // user wants to change the window size
       if (state->changingWindowSize) {
         float factor = 1.1f;
         if (event->wheel.y > 0) {
@@ -180,6 +206,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
           state->currentWindowSize.y /= factor;
         }
 
+        // user wants to change the window opacity
+        // we enforce upper and lower boundaries for a smooth experience as well
+        // as to avoid that the window becomes invisible and thus unreachable
       } else if (state->changingWindowOpacity) {
         float factor = 0.1f;
         if (event->wheel.y > 0) {
@@ -230,14 +259,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     return SDL_APP_FAILURE;
   }
 
-  // update texture if necessary
+  // TODO: only ever update if necessary
+  // update text every 10 seconds
   state->currentTime = SDL_GetTicks();
   if (state->lastTime == 0 || state->currentTime - state->lastTime > 1000) {
     state->lastTime = state->currentTime;
 
     // format new time
     time_t now = time(NULL);
-    size_t length = 9;
+    size_t length = 9;  // HH:MM:SS\0
     char text[length];
     strftime(text, length, "%H:%M:%S", localtime(&now));
 
@@ -279,11 +309,19 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   AppState *state = (AppState *)appstate;
 
+  // if an SDL error occurred, log it
   if (result == SDL_APP_FAILURE) {
     fprintf(stderr, "[ERROR] %s\n", SDL_GetError());
   }
 
+  // free memory and quit TTF system
+  TTF_CloseFont(state->font);
+  TTF_Quit();
+
+  // free memory and quit SDL system
+  SDL_DestroyTexture(state->textTexture);
+  SDL_DestroyRenderer(state->renderer);
+  SDL_DestroyWindow(state->window);
   SDL_free(state);
   SDL_Quit();
-  TTF_Quit();
 }
