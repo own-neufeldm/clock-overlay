@@ -16,13 +16,8 @@ typedef struct {
 
   bool changingWindowPosition;
   SDL_Point startChangeMousePosition;
-  SDL_Point originWindowPosition;
-  SDL_Point currentWindowPosition;
-
-  // TODO: either remove or fix scaling, somehow aspect ratio is lost
-  bool changingWindowSize;
-  SDL_Point originWindowSize;
-  SDL_Point currentWindowSize;
+  SDL_Rect originWindowGeometry;
+  SDL_Rect currentWindowGeometry;
 
   bool changingWindowOpacity;
   float originWindowOpacity;
@@ -109,10 +104,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_Point position = {displayMode->w - size.x - 10, 10};
 
   // set window properties
-  state->originWindowPosition = position;
-  state->currentWindowPosition = state->originWindowPosition;
-  state->originWindowSize = size;
-  state->currentWindowSize = state->originWindowSize;
+  state->originWindowGeometry = (SDL_Rect){
+      .x = position.x,
+      .y = position.y,
+      .w = size.x,
+      .h = size.y,
+  };
+  state->currentWindowGeometry = state->originWindowGeometry;
   state->originWindowOpacity = 0.8f;
   state->currentWindowOpacity = state->originWindowOpacity;
 
@@ -130,15 +128,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     case SDL_EVENT_KEY_DOWN:
       switch (event->key.key) {
-        // user wants to change the window size
+        // user wants to change the window opacity
         case SDLK_LCTRL:
         case SDLK_RCTRL:
-          state->changingWindowSize = true;
-          break;
-
-        // user wants to change the window opacity
-        case SDLK_LSHIFT:
-        case SDLK_RSHIFT:
           state->changingWindowOpacity = true;
           break;
       }
@@ -146,15 +138,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     case SDL_EVENT_KEY_UP:
       switch (event->key.key) {
-        // user finished changing the window size
+        // user finished changing the window opacity
         case SDLK_LCTRL:
         case SDLK_RCTRL:
-          state->changingWindowSize = false;
-          break;
-
-        // user finished changing the window opacity
-        case SDLK_LSHIFT:
-        case SDLK_RSHIFT:
           state->changingWindowOpacity = false;
           break;
       }
@@ -185,12 +171,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
         // user wants to reset a window property to its default value
         case SDL_BUTTON_RIGHT:
-          if (state->changingWindowSize) {
-            state->currentWindowSize = state->originWindowSize;
-          } else if (state->changingWindowOpacity) {
+          if (state->changingWindowOpacity) {
             state->currentWindowOpacity = state->originWindowOpacity;
           } else {
-            state->currentWindowPosition = state->originWindowPosition;
+            state->currentWindowGeometry = state->originWindowGeometry;
           }
           break;
       }
@@ -203,27 +187,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             event->motion.x - state->startChangeMousePosition.x,
             event->motion.y - state->startChangeMousePosition.y,
         };
-        state->currentWindowPosition.x += offset.x;
-        state->currentWindowPosition.y += offset.y;
+        state->currentWindowGeometry.x += offset.x;
+        state->currentWindowGeometry.y += offset.y;
       }
       break;
 
     case SDL_EVENT_MOUSE_WHEEL:
-      // user wants to change the window size
-      if (state->changingWindowSize) {
-        float factor = 1.1f;
-        if (event->wheel.y > 0) {
-          state->currentWindowSize.x *= factor;
-          state->currentWindowSize.y *= factor;
-        } else {
-          state->currentWindowSize.x /= factor;
-          state->currentWindowSize.y /= factor;
-        }
-
-        // user wants to change the window opacity
-        // we enforce upper and lower boundaries for a smooth experience as well
-        // as to avoid that the window becomes invisible and thus unreachable
-      } else if (state->changingWindowOpacity) {
+      // user wants to change the window opacity
+      // we enforce upper and lower boundaries for a smooth experience as well
+      // as to avoid that the window becomes invisible and thus unreachable
+      if (state->changingWindowOpacity) {
         float factor = 0.1f;
         if (event->wheel.y > 0) {
           float newOpacity = state->currentWindowOpacity + factor;
@@ -254,15 +227,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   }
 
   // update window position
-  int x = state->currentWindowPosition.x;
-  int y = state->currentWindowPosition.y;
+  int x = state->currentWindowGeometry.x;
+  int y = state->currentWindowGeometry.y;
   if (!SDL_SetWindowPosition(state->window, x, y)) {
     return SDL_APP_FAILURE;
   }
 
   // update window size
-  int w = state->currentWindowSize.x;
-  int h = state->currentWindowSize.y;
+  int w = state->currentWindowGeometry.w;
+  int h = state->currentWindowGeometry.h;
   if (!SDL_SetWindowSize(state->window, w, h)) {
     return SDL_APP_FAILURE;
   }
