@@ -198,19 +198,19 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       // as to avoid that the window becomes invisible and thus unreachable
       if (state->changingWindowOpacity) {
         float factor = 0.1f;
+        float newOpacity;
         if (event->wheel.y > 0) {
-          float newOpacity = state->currentWindowOpacity + factor;
+          newOpacity = state->currentWindowOpacity + factor;
           if (newOpacity > 1.0f) {
             newOpacity = 1.0f;
           }
-          state->currentWindowOpacity = newOpacity;
         } else {
-          float newOpacity = state->currentWindowOpacity - factor;
+          newOpacity = state->currentWindowOpacity - factor;
           if (newOpacity < 0.1f) {
             newOpacity = 0.1f;
           }
-          state->currentWindowOpacity = newOpacity;
         }
+        state->currentWindowOpacity = newOpacity;
       }
       break;
   }
