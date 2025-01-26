@@ -273,8 +273,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     return SDL_APP_FAILURE;
   }
 
-  // TODO: only ever update if necessary
-  // update text every 10 seconds
+  // update text every 1 second(s)
   state->currentTime = SDL_GetTicks();
   if (state->lastTime == 0 || state->currentTime - state->lastTime > 1000) {
     state->lastTime = state->currentTime;
