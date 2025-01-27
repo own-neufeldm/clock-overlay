@@ -62,7 +62,7 @@ bool loadWindow(AppState *state) {
   // determine minimal window size
   const char *text = "88:88:88";
   SDL_Point size = {};
-  if (!TTF_GetStringSize(state->font, text, state->length, size.x, size.y)) {
+  if (!TTF_GetStringSize(state->font, text, state->length, &size.x, &size.y)) {
     return false;
   }
 
