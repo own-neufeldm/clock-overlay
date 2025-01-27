@@ -31,12 +31,12 @@ typedef struct {
   SDL_Renderer *renderer;
   TTF_Font *font;
   SDL_Texture *texture;
+  char text[BUFFER_LENGTH];
   bool changePosition;
   SDL_Rect requestedGeometry;
   SDL_Point relativeMousePosition;
   bool changeOpacity;
   float requestedOpacity;
-  char text[BUFFER_LENGTH];
 } AppState;
 
 /**
@@ -129,38 +129,6 @@ bool loadRenderer(AppState *state) {
   return SDL_SetRenderDrawColor(state->renderer, r, g, b, a);
 }
 
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  // allocate application state
-  AppState *state = SDL_calloc(1, sizeof(AppState));
-  if (state == NULL) {
-    return SDL_APP_FAILURE;
-  }
-  *appstate = state;
-
-  // initialize system
-  if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
-    return SDL_APP_FAILURE;
-  }
-
-  // configure style
-  state->windowFlags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
-  state->defaultGeometry = (SDL_Rect){.x = -5, .y = 5, .w = 0, .h = 0};
-  state->defaultOpacity = 0.8f;
-  state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
-  state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
-  state->timeFormat = "%H:%M:%S";
-  state->timeReference = "88:88:88";
-  state->fontFile = "assets/Roboto/static/Roboto-Regular.ttf";  // TODO: change
-  state->fontSize = 12;
-
-  // load resources
-  if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
-    return SDL_APP_FAILURE;
-  }
-
-  return SDL_APP_CONTINUE;
-}
-
 /**
  * Update window position to requested value, but only if it differs.
  *
@@ -240,6 +208,38 @@ bool renderTexture(AppState *state) {
   SDL_FRect *srcrect = NULL;
   SDL_FRect *dstrect = NULL;
   return SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect);
+}
+
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  // allocate application state
+  AppState *state = SDL_calloc(1, sizeof(AppState));
+  if (state == NULL) {
+    return SDL_APP_FAILURE;
+  }
+  *appstate = state;
+
+  // initialize system
+  if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
+    return SDL_APP_FAILURE;
+  }
+
+  // configure style
+  state->windowFlags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+  state->defaultGeometry = (SDL_Rect){.x = -5, .y = 5, .w = 0, .h = 0};
+  state->defaultOpacity = 0.8f;
+  state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
+  state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
+  state->timeFormat = "%H:%M:%S";
+  state->timeReference = "88:88:88";
+  state->fontFile = "assets/Roboto/static/Roboto-Regular.ttf";  // TODO: change
+  state->fontSize = 12;
+
+  // load resources
+  if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
+    return SDL_APP_FAILURE;
+  }
+
+  return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
