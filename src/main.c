@@ -14,25 +14,26 @@
  * \param tbc
  */
 typedef struct {
-  TTF_Font *font;
-  SDL_Window *window;
-  SDL_Renderer *renderer;
-
-  bool changePosition;
-  SDL_Point relativeMousePosition;
+  // style configured by developer
+  SDL_WindowFlags windowFlags;
   SDL_Rect defaultGeometry;
-  SDL_Rect requestedGeometry;
-
-  bool changeOpacity;
   float defaultOpacity;
-  float requestedOpacity;
-
-  Uint64 lastUpdate;
   SDL_Color foregroundColor;
   SDL_Color backgroundColor;
-  const char *format;
-  size_t length;
+  const char *timeFormat;
+  const char *fontFile;
+  int fontSize;
+
+  // resources managed by application
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+  TTF_Font *font;
   SDL_Texture *texture;
+  bool changePosition;
+  SDL_Rect requestedGeometry;
+  SDL_Point relativeMousePosition;
+  bool changeOpacity;
+  float requestedOpacity;
 } AppState;
 
 /**
@@ -43,11 +44,7 @@ typedef struct {
  * \returns A boolean value indicating success or failure.
  */
 bool loadFont(AppState *state) {
-  // TODO: create own font or use something with MIT license
-  const char *file = "assets/Roboto/static/Roboto-Regular.ttf";
-  int ptsize = 12;
-
-  state->font = TTF_OpenFont(file, ptsize);
+  state->font = TTF_OpenFont(state->fontFile, state->fontSize);
   return state->font != NULL;
 }
 
@@ -59,45 +56,50 @@ bool loadFont(AppState *state) {
  * \returns A boolean value indicating success or failure.
  */
 bool loadWindow(AppState *state) {
-  // determine minimal window size
-  const char *text = "88:88:88";
-  SDL_Point size = {};
-  if (!TTF_GetStringSize(state->font, text, state->length, &size.x, &size.y)) {
-    return false;
+  // normalize default size
+  if (state->defaultGeometry.w == 0 || state->defaultGeometry.h == 0) {
+    const char *text = "88:88:88";
+    size_t length = 0;
+    int *w = &state->defaultGeometry.w;
+    int *h = &state->defaultGeometry.h;
+    if (!TTF_GetStringSize(state->font, text, length, w, h)) {
+      return false;
+    }
   }
 
   // create window, hidden
   const char *title = NULL;
-  SDL_WindowFlags flags =
-      SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | SDL_WINDOW_HIDDEN;
-  state->window = SDL_CreateWindow(title, size.x, size.y, flags);
+  int w = state->defaultGeometry.w;
+  int h = state->defaultGeometry.h;
+  SDL_WindowFlags flags = state->windowFlags | SDL_WINDOW_HIDDEN;
+  state->window = SDL_CreateWindow(title, w, h, flags);
   if (state->window == NULL) {
     return false;
   }
 
-  // determine position in upper-right corner of the screen
-  SDL_DisplayID displayID = SDL_GetDisplayForWindow(state->window);
-  const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayID);
-  if (displayMode == NULL) {
-    return false;
+  // normalize default position
+  if (state->defaultGeometry.x < 0 || state->defaultGeometry.y < 0) {
+    SDL_DisplayID displayID = SDL_GetDisplayForWindow(state->window);
+    const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(displayID);
+    if (displayMode == NULL) {
+      return false;
+    }
+    if (state->defaultGeometry.x < 0) {
+      state->defaultGeometry.x += displayMode->w - state->defaultGeometry.w;
+    }
+    if (state->defaultGeometry.y < 0) {
+      state->defaultGeometry.y += displayMode->h - state->defaultGeometry.h;
+    }
   }
-  SDL_Point position = {displayMode->w - size.x - 5, 5};
 
-  // update window properties
-  state->defaultGeometry = (SDL_Rect){size.x, size.y, position.x, position.y};
+  // initialize dynamic variables with default values
   state->requestedGeometry = state->defaultGeometry;
-  if (!SDL_SetWindowPosition(state->window, position.x, position.y)) {
-    return false;
-  }
   state->requestedOpacity = state->defaultOpacity;
-  if (!SDL_SetWindowOpacity(state->window, state->defaultOpacity)) {
-    return false;
-  }
-  return SDL_ShowWindow(state->window);
+  return true;
 }
 
 /**
- * Loads the default renderer. Requires the main window to be loaded.
+ * Loads the default renderer. Requires window to be loaded.
  *
  * \param state the application state.
  *
@@ -111,80 +113,12 @@ bool loadRenderer(AppState *state) {
     return false;
   }
 
-  // update renderer properties
-  return SDL_SetRenderDrawColor(
-      state->renderer, state->backgroundColor.r, state->backgroundColor.g,
-      state->backgroundColor.b, state->backgroundColor.a);
-}
-
-/**
- * Apply the requested window position, but only if a change is necessary.
- *
- * \param state the application state.
- *
- * \returns A boolean value indicating success or failure.
- */
-bool updatePosition(AppState *state) {
-  if (!state->changePosition) {
-    return true;
-  }
-
-  return SDL_SetWindowPosition(state->window, state->requestedGeometry.x,
-                               state->requestedGeometry.y);
-}
-
-/**
- * Apply the requested window opacity, but only if a change is necessary.
- *
- * \param state the application state.
- *
- * \returns A boolean value indicating success or failure.
- */
-bool updateOpacity(AppState *state) {
-  if (!state->changeOpacity) {
-    return true;
-  }
-
-  printf("Updating opacity to %f\n", state->requestedOpacity);
-  return SDL_SetWindowOpacity(state->window, state->requestedOpacity);
-}
-
-/**
- * Create a new texture containing the time, but only if a change is necessary.
- *
- * \param state the application state.
- *
- * \returns A boolean value indicating success or failure.
- */
-bool updateTexture(AppState *state) {
-  // update text every 1 second(s)
-  Uint64 currentUpdate = SDL_GetTicks();
-  if (state->lastUpdate != 0 && currentUpdate < state->lastUpdate + 1000) {
-    return true;
-  }
-  state->lastUpdate = currentUpdate;
-
-  // format new time
-  time_t now = time(NULL);
-  char text[state->length];
-  strftime(text, state->length, state->format, localtime(&now));
-
-  // render text to surface
-  SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, state->length,
-                                              state->foregroundColor);
-  if (surface == NULL) {
-    return false;
-  }
-
-  // convert surface to texture
-  state->texture = SDL_CreateTextureFromSurface(state->renderer, surface);
-  if (state->texture == NULL) {
-    return true;
-  }
-
-  // free temporary resources
-  SDL_DestroySurface(surface);
-  return true;
+  // set color properties
+  Uint8 r = state->backgroundColor.r;
+  Uint8 g = state->backgroundColor.g;
+  Uint8 b = state->backgroundColor.b;
+  Uint8 a = state->backgroundColor.a;
+  return SDL_SetRenderDrawColor(state->renderer, r, g, b, a);
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
@@ -195,20 +129,131 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
   *appstate = state;
 
-  // set application properties
-  state->defaultOpacity = 0.8f;
-  state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
-  state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255};
-  state->format = "%H:%M:%S";
-  state->length = 9;  // HH:MM:SS\0
-
   // initialize system
   if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
     return SDL_APP_FAILURE;
   }
 
+  // configure style
+  state->windowFlags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+  state->defaultGeometry = (SDL_Rect){.x = -5, .y = 5, .w = 0, .h = 0};
+  state->defaultOpacity = 0.8f;
+  state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
+  state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
+  state->timeFormat = "%H:%M:%S";
+  state->fontFile = "assets/Roboto/static/Roboto-Regular.ttf";  // TODO: change
+  state->fontSize = 12;
+
   // load resources
   if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
+    return SDL_APP_FAILURE;
+  }
+
+  return SDL_APP_CONTINUE;
+}
+
+/**
+ * Update window position to requested value, but only if it differs.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool updatePosition(AppState *state) {
+  int cx, cy;
+  if (!SDL_GetWindowPosition(state->window, &cx, &cy)) {
+    return false;
+  }
+
+  int rx = state->requestedGeometry.x;
+  int ry = state->requestedGeometry.y;
+  if (cx == rx && cy == ry) {
+    return true;
+  }
+
+  return SDL_SetWindowPosition(state->window, rx, ry);
+}
+
+/**
+ * Update window opacity to requested value, but only if it differs.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool updateOpacity(AppState *state) {
+  float currentOpacity = SDL_GetWindowOpacity(state->window);
+  if (currentOpacity == -1.0f) {
+    return false;
+  }
+
+  if (currentOpacity == state->requestedOpacity) {
+    return true;
+  }
+
+  return SDL_SetWindowOpacity(state->window, state->requestedOpacity);
+}
+
+/**
+ * Render to the buffer, creating a new texture first if time has changed.
+ *
+ * \param state the application state.
+ *
+ * \returns A boolean value indicating success or failure.
+ */
+bool renderTexture(AppState *state) {
+  // TODO: only create a new texture if time has changed
+
+  // format new time
+  time_t now = time(NULL);
+  size_t length = 100;
+  char text[length];
+  strftime(text, length, state->timeFormat, localtime(&now));
+
+  // render text to surface
+  SDL_Color fg = state->foregroundColor;
+  SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
+  if (surface == NULL) {
+    return false;
+  }
+
+  // convert surface to texture
+  state->texture = SDL_CreateTextureFromSurface(state->renderer, surface);
+  if (state->texture == NULL) {
+    return true;
+  }
+  SDL_DestroySurface(surface);
+
+  // write entire texture to entire buffer
+  SDL_FRect *srcrect = NULL;
+  SDL_FRect *dstrect = NULL;
+  return SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect);
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate) {
+  AppState *state = (AppState *)appstate;
+
+  // reset buffer
+  if (!SDL_RenderClear(state->renderer)) {
+    return SDL_APP_FAILURE;
+  }
+
+  // make updates, if necessary, and render to buffer
+  if (!updatePosition(state)) {
+    return SDL_APP_FAILURE;
+  }
+  if (!updateOpacity(state)) {
+    return SDL_APP_FAILURE;
+  }
+  if (!renderTexture(state)) {
+    return SDL_APP_FAILURE;
+  }
+
+  // draw buffer and show window, if hidden
+  if (!SDL_RenderPresent(state->renderer)) {
+    return SDL_APP_FAILURE;
+  }
+  if (!SDL_ShowWindow(state->window)) {
     return SDL_APP_FAILURE;
   }
 
@@ -311,39 +356,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
         state->requestedOpacity = newOpacity;
       }
       break;
-  }
-
-  return SDL_APP_CONTINUE;
-}
-
-SDL_AppResult SDL_AppIterate(void *appstate) {
-  AppState *state = (AppState *)appstate;
-
-  // reset buffer
-  if (!SDL_RenderClear(state->renderer)) {
-    return SDL_APP_FAILURE;
-  }
-
-  // update window properties, if necessary
-  if (!updatePosition(state) || !updateOpacity(state)) {
-    return SDL_APP_FAILURE;
-  }
-
-  // update texture, if necessary
-  if (!updateTexture(state)) {
-    return SDL_APP_FAILURE;
-  }
-
-  // write entire texture to entire buffer
-  SDL_FRect *srcrect = NULL;
-  SDL_FRect *dstrect = NULL;
-  if (!SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect)) {
-    return SDL_APP_FAILURE;
-  }
-
-  // draw buffer
-  if (!SDL_RenderPresent(state->renderer)) {
-    return SDL_APP_FAILURE;
   }
 
   return SDL_APP_CONTINUE;
