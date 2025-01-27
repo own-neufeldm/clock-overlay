@@ -1,4 +1,5 @@
 #define SDL_MAIN_USE_CALLBACKS
+#define BUFFER_LENGTH 100
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -21,6 +22,7 @@ typedef struct {
   SDL_Color foregroundColor;
   SDL_Color backgroundColor;
   const char *timeFormat;
+  const char *timeReference;
   const char *fontFile;
   int fontSize;
 
@@ -34,6 +36,7 @@ typedef struct {
   SDL_Point relativeMousePosition;
   bool changeOpacity;
   float requestedOpacity;
+  char text[BUFFER_LENGTH];
 } AppState;
 
 /**
@@ -58,12 +61,17 @@ bool loadFont(AppState *state) {
 bool loadWindow(AppState *state) {
   // normalize default size
   if (state->defaultGeometry.w == 0 || state->defaultGeometry.h == 0) {
-    const char *text = "88:88:88";
+    const char *text = state->timeReference;
     size_t length = 0;
-    int *w = &state->defaultGeometry.w;
-    int *h = &state->defaultGeometry.h;
-    if (!TTF_GetStringSize(state->font, text, length, w, h)) {
+    int w, h;
+    if (!TTF_GetStringSize(state->font, text, length, &w, &h)) {
       return false;
+    }
+    if (state->defaultGeometry.w == 0) {
+      state->defaultGeometry.w = w;
+    }
+    if (state->defaultGeometry.h == 0) {
+      state->defaultGeometry.h = h;
     }
   }
 
@@ -141,6 +149,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
   state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
   state->timeFormat = "%H:%M:%S";
+  state->timeReference = "88:88:88";
   state->fontFile = "assets/Roboto/static/Roboto-Regular.ttf";  // TODO: change
   state->fontSize = 12;
 
@@ -202,29 +211,32 @@ bool updateOpacity(AppState *state) {
  * \returns A boolean value indicating success or failure.
  */
 bool renderTexture(AppState *state) {
-  // TODO: only create a new texture if time has changed
-
   // format new time
-  time_t now = time(NULL);
-  size_t length = 100;
+  size_t length = BUFFER_LENGTH;
   char text[length];
+  time_t now = time(NULL);
   strftime(text, length, state->timeFormat, localtime(&now));
 
-  // render text to surface
-  SDL_Color fg = state->foregroundColor;
-  SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
-  if (surface == NULL) {
-    return false;
+  // ensure texture is up to date
+  if (strcmp(text, state->text) != 0) {
+    strcpy(state->text, text);
+
+    // render text to surface
+    SDL_Color fg = state->foregroundColor;
+    SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
+    if (surface == NULL) {
+      return false;
+    }
+
+    // convert surface to texture
+    state->texture = SDL_CreateTextureFromSurface(state->renderer, surface);
+    if (state->texture == NULL) {
+      return true;
+    }
+    SDL_DestroySurface(surface);
   }
 
-  // convert surface to texture
-  state->texture = SDL_CreateTextureFromSurface(state->renderer, surface);
-  if (state->texture == NULL) {
-    return true;
-  }
-  SDL_DestroySurface(surface);
-
-  // write entire texture to entire buffer
+  // render entire texture to entire buffer
   SDL_FRect *srcrect = NULL;
   SDL_FRect *dstrect = NULL;
   return SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect);
