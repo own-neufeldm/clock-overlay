@@ -68,11 +68,8 @@ bool loadWindow(AppState *state) {
 
   // create window, hidden
   const char *title = NULL;
-  SDL_WindowFlags flags = (
-    SDL_WINDOW_ALWAYS_ON_TOP |
-    SDL_WINDOW_BORDERLESS |
-    SDL_WINDOW_HIDDEN
-    );
+  SDL_WindowFlags flags =
+      SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | SDL_WINDOW_HIDDEN;
   state->window = SDL_CreateWindow(title, size.x, size.y, flags);
   if (state->window == NULL) {
     return false;
@@ -84,11 +81,10 @@ bool loadWindow(AppState *state) {
   if (displayMode == NULL) {
     return false;
   }
-  SDL_Point position = { displayMode->w - size.x - 5, 5 };
-
+  SDL_Point position = {displayMode->w - size.x - 5, 5};
 
   // update window properties
-  state->defaultGeometry = (SDL_Rect){ size.x, size.y, position.x, position.y };
+  state->defaultGeometry = (SDL_Rect){size.x, size.y, position.x, position.y};
   state->requestedGeometry = state->defaultGeometry;
   if (!SDL_SetWindowPosition(state->window, position.x, position.y)) {
     return false;
@@ -97,8 +93,6 @@ bool loadWindow(AppState *state) {
   if (!SDL_SetWindowOpacity(state->window, state->defaultOpacity)) {
     return false;
   }
-
-  // show window
   return SDL_ShowWindow(state->window);
 }
 
@@ -119,12 +113,8 @@ bool loadRenderer(AppState *state) {
 
   // update renderer properties
   return SDL_SetRenderDrawColor(
-    state->renderer,
-    state->backgroundColor.r,
-    state->backgroundColor.g,
-    state->backgroundColor.b,
-    state->backgroundColor.a
-  );
+      state->renderer, state->backgroundColor.r, state->backgroundColor.g,
+      state->backgroundColor.b, state->backgroundColor.a);
 }
 
 /**
@@ -139,11 +129,8 @@ bool updatePosition(AppState *state) {
     return true;
   }
 
-  return SDL_SetWindowPosition(
-    state->window,
-    state->requestedGeometry.x,
-    state->requestedGeometry.y
-  );
+  return SDL_SetWindowPosition(state->window, state->requestedGeometry.x,
+                               state->requestedGeometry.y);
 }
 
 /**
@@ -159,10 +146,7 @@ bool updateOpacity(AppState *state) {
   }
 
   printf("Updating opacity to %f\n", state->requestedOpacity);
-  return SDL_SetWindowOpacity(
-    state->window,
-    state->requestedOpacity
-  );
+  return SDL_SetWindowOpacity(state->window, state->requestedOpacity);
 }
 
 /**
@@ -186,12 +170,8 @@ bool updateTexture(AppState *state) {
   strftime(text, state->length, state->format, localtime(&now));
 
   // render text to surface
-  SDL_Surface *surface = TTF_RenderText_Solid(
-    state->font,
-    text,
-    state->length,
-    state->foregroundColor
-  );
+  SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, state->length,
+                                              state->foregroundColor);
   if (surface == NULL) {
     return false;
   }
@@ -217,10 +197,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   // set application properties
   state->defaultOpacity = 0.8f;
-  state->foregroundColor = (SDL_Color){ .r = 0, .g = 255, .b = 0, .a = 255 };
-  state->backgroundColor = (SDL_Color){ .r = 0, .g = 0, .b = 0, .a = 255 };
+  state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255};
+  state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255};
   state->format = "%H:%M:%S";
-  state->length = 9; // HH:MM:SS\0
+  state->length = 9;  // HH:MM:SS\0
 
   // initialize system
   if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
@@ -240,97 +220,97 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
   switch (event->type) {
     // application process was terminated
-  case SDL_EVENT_QUIT:
-    return SDL_APP_SUCCESS;
-    break;
-
-  case SDL_EVENT_KEY_DOWN:
-    switch (event->key.key) {
-      // user wants to change the window opacity
-    case SDLK_LCTRL:
-    case SDLK_RCTRL:
-      state->changeOpacity = true;
-      break;
-    }
-    break;
-
-  case SDL_EVENT_KEY_UP:
-    switch (event->key.key) {
-      // user finished changing the window opacity
-    case SDLK_LCTRL:
-    case SDLK_RCTRL:
-      state->changeOpacity = false;
-      break;
-    }
-    break;
-
-  case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    switch (event->button.button) {
-      // user wants to change the window position (drag)
-    case SDL_BUTTON_LEFT:
-      state->changePosition = true;
-      state->relativeMousePosition.x = event->motion.x;
-      state->relativeMousePosition.y = event->motion.y;
-      break;
-    }
-    break;
-
-  case SDL_EVENT_MOUSE_BUTTON_UP:
-    switch (event->button.button) {
-      // user finished changing the window position (drag)
-    case SDL_BUTTON_LEFT:
-      state->changePosition = false;
-      break;
-
-      // user wants to quit the application
-    case SDL_BUTTON_MIDDLE:
+    case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
       break;
 
-      // user wants to reset a window property to its default value
-    case SDL_BUTTON_RIGHT:
-      if (state->changeOpacity) {
-        state->requestedOpacity = state->defaultOpacity;
-      } else {
-        state->requestedGeometry = state->defaultGeometry;
+    case SDL_EVENT_KEY_DOWN:
+      switch (event->key.key) {
+        // user wants to change the window opacity
+        case SDLK_LCTRL:
+        case SDLK_RCTRL:
+          state->changeOpacity = true;
+          break;
       }
       break;
-    }
-    break;
 
-  case SDL_EVENT_MOUSE_MOTION:
-    // user wants to change the window position (drag)
-    if (state->changePosition) {
-      SDL_Point offset = {
-        event->motion.x - state->relativeMousePosition.x,
-        event->motion.y - state->relativeMousePosition.y,
-      };
-      state->requestedGeometry.x += offset.x;
-      state->requestedGeometry.y += offset.y;
-    }
-    break;
-
-  case SDL_EVENT_MOUSE_WHEEL:
-    // user wants to change the window opacity
-    // we enforce upper and lower boundaries for a smooth experience as well
-    // as to avoid that the window becomes invisible and thus unreachable
-    if (state->changeOpacity) {
-      float factor = 0.1f;
-      float newOpacity;
-      if (event->wheel.y > 0) {
-        newOpacity = state->requestedOpacity + factor;
-        if (newOpacity > 1.0f) {
-          newOpacity = 1.0f;
-        }
-      } else {
-        newOpacity = state->requestedOpacity - factor;
-        if (newOpacity < 0.1f) {
-          newOpacity = 0.1f;
-        }
+    case SDL_EVENT_KEY_UP:
+      switch (event->key.key) {
+        // user finished changing the window opacity
+        case SDLK_LCTRL:
+        case SDLK_RCTRL:
+          state->changeOpacity = false;
+          break;
       }
-      state->requestedOpacity = newOpacity;
-    }
-    break;
+      break;
+
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+      switch (event->button.button) {
+        // user wants to change the window position (drag)
+        case SDL_BUTTON_LEFT:
+          state->changePosition = true;
+          state->relativeMousePosition.x = event->motion.x;
+          state->relativeMousePosition.y = event->motion.y;
+          break;
+      }
+      break;
+
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+      switch (event->button.button) {
+        // user finished changing the window position (drag)
+        case SDL_BUTTON_LEFT:
+          state->changePosition = false;
+          break;
+
+        // user wants to quit the application
+        case SDL_BUTTON_MIDDLE:
+          return SDL_APP_SUCCESS;
+          break;
+
+        // user wants to reset a window property to its default value
+        case SDL_BUTTON_RIGHT:
+          if (state->changeOpacity) {
+            state->requestedOpacity = state->defaultOpacity;
+          } else {
+            state->requestedGeometry = state->defaultGeometry;
+          }
+          break;
+      }
+      break;
+
+    case SDL_EVENT_MOUSE_MOTION:
+      // user wants to change the window position (drag)
+      if (state->changePosition) {
+        SDL_Point offset = {
+            event->motion.x - state->relativeMousePosition.x,
+            event->motion.y - state->relativeMousePosition.y,
+        };
+        state->requestedGeometry.x += offset.x;
+        state->requestedGeometry.y += offset.y;
+      }
+      break;
+
+    case SDL_EVENT_MOUSE_WHEEL:
+      // user wants to change the window opacity
+      // we enforce upper and lower boundaries for a smooth experience as well
+      // as to avoid that the window becomes invisible and thus unreachable
+      if (state->changeOpacity) {
+        float factor = 0.1f;
+        float newOpacity;
+        if (event->wheel.y > 0) {
+          newOpacity = state->requestedOpacity + factor;
+          if (newOpacity > 1.0f) {
+            newOpacity = 1.0f;
+          }
+        } else {
+          newOpacity = state->requestedOpacity - factor;
+          if (newOpacity < 0.1f) {
+            newOpacity = 0.1f;
+          }
+        }
+        state->requestedOpacity = newOpacity;
+      }
+      break;
   }
 
   return SDL_APP_CONTINUE;
@@ -354,7 +334,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     return SDL_APP_FAILURE;
   }
 
-  // write entire texture to entire buffer 
+  // write entire texture to entire buffer
   SDL_FRect *srcrect = NULL;
   SDL_FRect *dstrect = NULL;
   if (!SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect)) {
