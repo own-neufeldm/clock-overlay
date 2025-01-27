@@ -66,11 +66,17 @@ bool loadWindow(AppState *state) {
     return false;
   }
 
-  // create window
+  // create window, hidden
   const char *title = NULL;
-  SDL_WindowFlags flags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+  SDL_WindowFlags flags = (
+    SDL_WINDOW_ALWAYS_ON_TOP |
+    SDL_WINDOW_BORDERLESS |
+    SDL_WINDOW_HIDDEN
+    );
   state->window = SDL_CreateWindow(title, size.x, size.y, flags);
-  return state->window != NULL;
+  if (state->window == NULL) {
+    return false;
+  }
 
   // determine position in upper-right corner of the screen
   SDL_DisplayID displayID = SDL_GetDisplayForWindow(state->window);
@@ -80,12 +86,20 @@ bool loadWindow(AppState *state) {
   }
   SDL_Point position = { displayMode->w - size.x - 5, 5 };
 
+
   // update window properties
   state->defaultGeometry = (SDL_Rect){ size.x, size.y, position.x, position.y };
+  state->requestedGeometry = state->defaultGeometry;
   if (!SDL_SetWindowPosition(state->window, position.x, position.y)) {
     return false;
   }
-  return SDL_SetWindowOpacity(state->window, state->defaultOpacity);
+  state->requestedOpacity = state->defaultOpacity;
+  if (!SDL_SetWindowOpacity(state->window, state->defaultOpacity)) {
+    return false;
+  }
+
+  // show window
+  return SDL_ShowWindow(state->window);
 }
 
 /**
@@ -144,6 +158,7 @@ bool updateOpacity(AppState *state) {
     return true;
   }
 
+  printf("Updating opacity to %f\n", state->requestedOpacity);
   return SDL_SetWindowOpacity(
     state->window,
     state->requestedOpacity
