@@ -5,9 +5,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 /**
  * Application state for passing data throughout callbacks.
@@ -180,8 +178,8 @@ bool updateOpacity(AppState *state) {
  */
 bool renderTexture(AppState *state) {
   // format new time
+  char text[BUFFER_LENGTH];
   size_t length = BUFFER_LENGTH;
-  char text[length];
   time_t now = time(NULL);
   strftime(text, length, state->timeFormat, localtime(&now));
 
@@ -231,7 +229,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
   state->timeFormat = "%H:%M:%S";
   state->timeReference = "88:88:88";
-  state->fontFile = "assets/Roboto/static/Roboto-Regular.ttf";  // TODO: change
+  state->fontFile = "assets/fonts/Roboto.ttf";  // TODO: change
   state->fontSize = 12;
 
   // load resources
