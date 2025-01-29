@@ -188,6 +188,7 @@ bool renderTexture(AppState *state) {
     strcpy(state->text, text);
 
     // render text to surface
+    size_t length = 0;
     SDL_Color fg = state->foregroundColor;
     SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
     if (surface == NULL) {
@@ -230,7 +231,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->timeFormat = "%H:%M:%S";
   state->timeReference = "88:88:88";
   state->fontFile = "assets/fonts/Roboto.ttf";  // TODO: change
-  state->fontSize = 12;
+  state->fontSize = 144;
 
   // load resources
   if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
