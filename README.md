@@ -2,43 +2,37 @@
 
 Clock overlay for desktops.
 
-## Working with submodules
-
-* add a submodule in current directory: `git submodule add <url>`
-* initialize all submodules recursively: `git submodule update --init --recursive --remote --merge`
-* update all submodules recursively: `git submodule update --recursive --remote --merge`
-* remove a submodule: follow [instructions](https://stackoverflow.com/questions/1260748/how-do-i-remove-a-submodule) as befits needs
-
 ## Requirements
 
-tbc
+The following dependencies must already be installed on your system:
+
+| Dependency                    | Version     |
+| ----------------------------- | ----------- |
+| [CMake](https://cmake.org/)   | ^3.29       |
+| [vcpkg](https://vcpkg.io/en/) | ^2025.01.13 |
+
+This application was built on and for Windows 11 using Visual Studio's C++ toolset. The following
+guide assumes that you have this toolset installed and that you are running the below commands in
+a Developer Command Prompt. Please refer to the official vendor documentation for more information.
 
 ## Setup
 
-Build the project using `cmake` (example with MSYS2 MinGW64 on Windows 11):
+Build the app using CMake with the `vcpkg` preset:
 
 ```pwsh
-mkdir .\build
-cmake `
-  -DCMAKE_BUILD_TYPE:STRING=Debug `
-  -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE `
-  -DCMAKE_C_COMPILER:FILEPATH=C:\msys64\ucrt64\bin\gcc.exe `
-  -DCMAKE_CXX_COMPILER:FILEPATH=C:\msys64\ucrt64\bin\g++.exe `
-  -S. `
-  -B.\build `
-  -G "MinGW Makefiles" `
-  --no-warn-unused-cli
-
-# repeat this step every time you change source code
+$env:VCPKG_ROOT="<root directory of your local vcpkg repository>"
+cmake --preset=vcpkg
 cmake --build build
 ```
 
-Run the project with `.\build\clock-overlay.exe`.
+Run the app with `.\build\clock-overlay.exe`.
 
 ## Usage
 
 You can move the window by holding the left mouse button and moving the mouse. To reset the window
-to its origin position, press the right mouse button. Press the middle mouse button to quit.
+to its default position, press the right mouse button. Press the middle mouse button to quit.
+
+Additionally, you can change the window's opacity by holding CTRL and scrolling the mouse wheel.
 
 ## Attributions
 

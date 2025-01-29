@@ -1,7 +1,5 @@
 # editor
-.vscode/*
-!.vscode/launch.json
-!.vscode/tasks.json
+.vscode
 
 # c
 build
