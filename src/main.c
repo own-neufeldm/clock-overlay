@@ -19,6 +19,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
+  // set metadata
+  char *name = "Clock Overlay";
+  char *version = "latest";
+  char *identifier = "com.ownneufeldm.clockoverlay";
+  if (!SDL_SetAppMetadata(name, version, identifier)) {
+    return SDL_APP_FAILURE;
+  }
+
   // configure style
   state->windowFlags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
   state->defaultGeometry = (SDL_Rect){.x = -5, .y = 5, .w = 0, .h = 0};
