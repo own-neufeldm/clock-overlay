@@ -8,7 +8,7 @@ set(SDLTTF_VENDORED ON)
 add_subdirectory(vendored/SDL_ttf EXCLUDE_FROM_ALL)
 
 # target
-add_executable("${CMAKE_PROJECT_NAME}" src/main.c)
+add_executable("${CMAKE_PROJECT_NAME}" src/main.c src/lib.c)
 target_link_libraries(
   "${CMAKE_PROJECT_NAME}" PRIVATE
   SDL3::SDL3
