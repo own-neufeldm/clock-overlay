@@ -35,7 +35,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
   state->timeFormat = "%H:%M:%S";
   state->timeReference = "88:88:88";
-  state->fontFile = "assets/fonts/Roboto.ttf";  // TODO: change
+  state->fontFile = "assets/fonts/Consolas.ttf";  // TODO: check license
   state->fontSize = 144;
 
   // load resources
