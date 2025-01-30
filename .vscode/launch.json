@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}\\build\\clock-overlay.exe",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build"
+    }
+  ],
+}
