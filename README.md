@@ -6,50 +6,45 @@ Clock overlay for desktops.
 
 The following dependencies must already be installed on your system:
 
-| Dependency                                  | Version |
-| ------------------------------------------- | ------- |
-| [python](https://www.python.org/downloads/) | ^3.12   |
-| [pipx](https://pipx.pypa.io/stable/)        | ^1.6    |
+| Dependency                    | Version     |
+| ----------------------------- | ----------- |
+| [CMake](https://cmake.org/)   | ^3.29       |
+| [vcpkg](https://vcpkg.io/en/) | ^2025.01.13 |
 
-This app was written on and for Windows 10 (x64). It may work on other operating systems but it is
-not officially supported.
+This application was built on and for Windows 11 using Visual Studio's C++ toolset. The following
+guide assumes that you have this toolset installed and that you are running the below commands in
+a Developer Command Prompt. Please refer to the official vendor documentation for more information.
 
 ## Setup
 
-Install the app using `pipx`, e.g. directly from GitHub using SSH:
+I don't understand how licensing works for system fonts, but I really want to use Consolas, so you
+have to bring your own TrueType font file. Place it in the `assets` directory as `font.ttf`. On
+Windows 11, system font files can be found in the `C:\Windows\Fonts` directory.
 
+Build the app using CMake with the `vcpkg` preset:
+
+```pwsh
+$env:VCPKG_ROOT="<root directory of your local vcpkg repository>"
+cmake --preset=vcpkg
+cmake --build build
 ```
-$ pipx install git+ssh://git@github.com/own-neufeldm/clock-overlay.git
 
-  installed package clock 1.0.3, installed using Python 3.12.5
-  These apps are now globally available
-    - clock-overlay.exe
-done! ✨ 🌟 ✨
-```
-
-You can now run the app using `clock-overlay`.
-
-Additionally, you can configure a shortcut to run the app from your Start Menu without opening a
-Terminal first. To do so, create a shortcut named `Clock Overlay` in the
-`C:\ProgramData\Microsoft\Windows\Start Menu\Programs` directory. Point it to the following target:
-`pwsh.exe -w hidden -c clock-overlay`. You can use [this asset](./clock/assets/icon.ico) as icon.
-
-> [!NOTE]
-> If you do not have PowerShell 7 (`pwsh`) installed, use `powershell.exe` instead.
-
-You can now run the app from your Start Menu using `Clock Overlay`.
+Run the app with `.\build\clock-overlay.exe`.
 
 ## Usage
 
-You can move the window by holding the left mouse button and moving the mouse. To reset the window to
-its origin position, press the right mouse button. Press the middle mouse button to quit.
+You can move the window by holding the left mouse button and moving the mouse. To reset the window
+to its default position, press the right mouse button. Press the middle mouse button to quit.
+
+Additionally, you can change the window's opacity by holding CTRL and scrolling the mouse wheel.
+Again, you can press the right mouse button, while holding CTRL this time, to reset the opacity.
 
 ## Attributions
 
 The following resources have been authored by other people:
 
-| Resource                          | Attribution                                    |
-| --------------------------------- | ---------------------------------------------- |
-| [App icon](clock/icons/clock.ico) | [Designed by Freepik](https://www.freepik.com) |
+| Resource                    | Attribution                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| [App icon](assets/icon.pmg) | [Clock icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/clock) |
 
 Thank you.

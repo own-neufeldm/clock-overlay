@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "options": {
+    "shell": {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "args": [
+        "/C",
+        "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\Tools\\VsDevCmd.bat\"",
+        "-arch=x64",
+        "-host_arch=x64",
+        "&&"
+      ],
+    }
+  },
+  "tasks": [
+    {
+      "label": "build",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "cmake-configure",
+        "cmake-build"
+      ]
+    },
+    {
+      "label": "cmake-configure",
+      "type": "shell",
+      "command": "cmake --preset=vcpkg"
+    },
+    {
+      "label": "cmake-build",
+      "type": "shell",
+      "command": "cmake --build build"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# python
-__pycache__
-
 # editor
-.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# c
+build
+
+# unlicensed assets
+assets/font.ttf
