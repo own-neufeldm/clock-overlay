@@ -43,8 +43,8 @@ Again, you can press the right mouse button, while holding CTRL this time, to re
 
 The following resources have been authored by other people:
 
-| Resource                    | Attribution                                    |
-| --------------------------- | ---------------------------------------------- |
-| [App icon](assets/icon.ico) | [Designed by Freepik](https://www.freepik.com) |
+| Resource                    | Attribution                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| [App icon](assets/icon.pmg) | [Clock icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/clock) |
 
 Thank you.
