@@ -48,6 +48,11 @@ typedef struct {
   const char *timeReference;
 
   /**
+   * Relative path to PNG image file for configuring window icon.
+   */
+  const char *iconFile;
+
+  /**
    * Relative path to TrueType font file for rendering text.
    */
   const char *fontFile;

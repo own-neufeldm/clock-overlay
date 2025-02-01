@@ -3,6 +3,7 @@
 #include "lib.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdio.h>
 #include <time.h>
@@ -53,11 +54,18 @@ bool loadWindow(AppState *state) {
       state->defaultGeometry.y += displayMode->h - state->defaultGeometry.h;
     }
   }
-
-  // initialize dynamic variables with default values
   state->requestedGeometry = state->defaultGeometry;
   state->requestedOpacity = state->defaultOpacity;
-  return true;
+
+  // load window icon
+  SDL_Surface *surface = IMG_Load(state->iconFile);
+  if (surface == NULL) {
+    return false;
+  }
+  bool ok = SDL_SetWindowIcon(state->window, surface);
+  SDL_DestroySurface(surface);
+
+  return ok;
 }
 
 bool loadRenderer(AppState *state) {
