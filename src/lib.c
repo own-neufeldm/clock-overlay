@@ -128,6 +128,7 @@ bool renderTexture(AppState *state) {
     SDL_Color fg = state->foregroundColor;
     SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
     if (surface == NULL) {
+      SDL_DestroySurface(surface);
       return false;
     }
 
