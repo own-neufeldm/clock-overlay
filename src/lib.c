@@ -126,7 +126,8 @@ bool renderTexture(AppState *state) {
     // render text to surface
     size_t length = 0;
     SDL_Color fg = state->foregroundColor;
-    SDL_Surface *surface = TTF_RenderText_Solid(state->font, text, length, fg);
+    SDL_Surface *surface =
+        TTF_RenderText_Blended(state->font, text, length, fg);
     if (surface == NULL) {
       SDL_DestroySurface(surface);
       return false;

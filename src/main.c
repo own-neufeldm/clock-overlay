@@ -33,11 +33,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->defaultOpacity = 0.8f;
   state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
   state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
-  state->timeFormat = "%H:%M:%S";
-  state->timeReference = "88:88:88";
+  state->timeFormat = "%H:%M";
+  state->timeReference = "88:88";
   state->iconFile = "assets/icon.png";
   state->fontFile = "assets/font.ttf";
-  state->fontSize = 144;
+  state->fontSize = 16;
 
   // load resources
   if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
