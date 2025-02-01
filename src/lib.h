@@ -48,7 +48,7 @@ typedef struct {
   const char *timeReference;
 
   /**
-   * Relative path to True-Type-Font file for rendering text.
+   * Relative path to TrueType font file for rendering text.
    */
   const char *fontFile;
 

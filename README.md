@@ -17,6 +17,10 @@ a Developer Command Prompt. Please refer to the official vendor documentation fo
 
 ## Setup
 
+I don't understand how licensing works for system fonts, but I really want to use Consolas, so you
+have to bring your own TrueType font file. Place it in the `assets` directory as `font.ttf`. On
+Windows 11, system font files can be found in the `C:\Windows\Fonts` directory.
+
 Build the app using CMake with the `vcpkg` preset:
 
 ```pwsh
@@ -33,6 +37,7 @@ You can move the window by holding the left mouse button and moving the mouse. T
 to its default position, press the right mouse button. Press the middle mouse button to quit.
 
 Additionally, you can change the window's opacity by holding CTRL and scrolling the mouse wheel.
+Again, you can press the right mouse button, while holding CTRL this time, to reset the opacity.
 
 ## Attributions
 
