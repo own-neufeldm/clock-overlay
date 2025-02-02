@@ -134,9 +134,10 @@ bool renderTexture(AppState *state) {
     }
 
     // convert surface to texture
+    SDL_DestroyTexture(state->texture);
     state->texture = SDL_CreateTextureFromSurface(state->renderer, surface);
     if (state->texture == NULL) {
-      return true;
+      return false;
     }
     SDL_DestroySurface(surface);
   }
