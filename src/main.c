@@ -7,7 +7,7 @@
 #include "lib.h"
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  // pass command-line arguments
+  // parse command-line arguments
   bool debug = false;
   if (argc == 2 && strcmp(argv[1], "--debug") == 0) {
     debug = true;
