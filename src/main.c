@@ -7,6 +7,12 @@
 #include "lib.h"
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  // parse command-line arguments
+  bool debug = false;
+  if (argc == 2 && strcmp(argv[1], "--debug") == 0) {
+    debug = true;
+  }
+
   // allocate application state
   AppState *state = SDL_calloc(1, sizeof(AppState));
   if (state == NULL) {
@@ -33,8 +39,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->defaultOpacity = 0.8f;
   state->foregroundColor = (SDL_Color){.r = 0, .g = 255, .b = 0};
   state->backgroundColor = (SDL_Color){.r = 0, .g = 0, .b = 0};
-  state->timeFormat = "%H:%M";
-  state->timeReference = "88:88";
+  state->timeFormat = debug ? "%H:%M:%S" : "%H:%M";
+  state->timeReference = debug ? "88:88:88" : "88:88";
   state->iconFile = "assets/icon.png";
   state->fontFile = "assets/font.ttf";
   state->fontSize = 16;

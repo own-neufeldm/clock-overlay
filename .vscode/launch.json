@@ -6,6 +6,9 @@
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}\\build\\clock-overlay.exe",
+      "args": [
+        "--debug"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "preLaunchTask": "build"
