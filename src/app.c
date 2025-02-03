@@ -165,7 +165,7 @@ bool updateTexture(AppState *state) {
   strcpy(state->text, text);
 
   // render text to surface
-  size_t length = 0;
+  length = 0;
   SDL_Color fg = state->foregroundColor;
   SDL_Surface *surface = TTF_RenderText_Blended(state->font, text, length, fg);
   if (surface == NULL) {
