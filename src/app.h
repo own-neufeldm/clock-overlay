@@ -63,52 +63,52 @@ typedef struct {
   int fontSize;
 
   /**
-   * Main window, managed by the application.
+   * Main window.
    */
   SDL_Window *window;
 
   /**
-   * Default renderer, managed by the application.
+   * Default renderer.
    */
   SDL_Renderer *renderer;
 
   /**
-   * Default font, managed by the application.
+   * Default font.
    */
   TTF_Font *font;
 
   /**
-   * Current texture to render, containing `text`, managed by the application.
+   * Current texture to render, containing `text`.
    */
   SDL_Texture *texture;
 
   /**
-   * Formatted time to draw, managed by the application.
+   * Formatted time to draw.
    */
   char text[BUFFER_LENGTH];
 
   /**
-   * Is the user dragging the window? Managed by the application.
+   * Is the user dragging the window?
    */
   bool changePosition;
 
   /**
-   * Geometry to apply when drawing the next frame, managed by the application.
+   * Geometry to apply when drawing the next frame.
    */
   SDL_Rect requestedGeometry;
 
   /**
-   * Offset start position when window is dragged, managed by the application.
+   * Offset start position when window is dragged.
    */
   SDL_Point relativeMousePosition;
 
   /**
-   * Is the user changing the window's opacity? Managed by the application.
+   * Is the user changing the window's opacity?
    */
   bool changeOpacity;
 
   /**
-   * Opacity to apply when drawing the next frame, managed by the application.
+   * Opacity to apply when drawing the next frame.
    */
   float requestedOpacity;
 } AppState;
@@ -159,10 +159,10 @@ bool updatePosition(AppState *state);
 bool updateOpacity(AppState *state);
 
 /**
- * Render to the buffer, creating a new texture first if text has changed.
+ * Update the texture containg `text`, but only if it differs.
  *
  * \param state the application state.
  *
  * \returns A boolean value indicating success or failure.
  */
-bool renderTexture(AppState *state);
+bool updateTexture(AppState *state);

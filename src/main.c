@@ -4,7 +4,11 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "lib.h"
+#include "app.h"
+
+static const char *NAME = "Clock Overlay";
+static const char *VERSION = "latest";
+static const char *IDENTIFIER = "com.ownneufeldm.clockoverlay";
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // parse command-line arguments
@@ -15,21 +19,25 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   // allocate application state
   AppState *state = SDL_calloc(1, sizeof(AppState));
-  if (state == NULL) {
+  if (state != NULL) {
+    SDL_Log("[ERROR] Unable to allocate app state: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
   *appstate = state;
 
   // initialize system
-  if (!SDL_Init(SDL_INIT_VIDEO) || !TTF_Init()) {
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
+    SDL_Log("[ERROR] Unable to initialize SDL: %s\n", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
+  if (!TTF_Init()) {
+    SDL_Log("[ERROR] Unable to initialize TTF: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
   // set metadata
-  char *name = "Clock Overlay";
-  char *version = "latest";
-  char *identifier = "com.ownneufeldm.clockoverlay";
-  if (!SDL_SetAppMetadata(name, version, identifier)) {
+  if (!SDL_SetAppMetadata(NAME, VERSION, IDENTIFIER)) {
+    SDL_Log("[ERROR] Unable to set metadata: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
@@ -46,7 +54,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   state->fontSize = 16;
 
   // load resources
-  if (!loadFont(state) || !loadWindow(state) || !loadRenderer(state)) {
+  if (!loadFont(state)) {
+    SDL_Log("[ERROR] Unable to load font: %s\n", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
+  if (!loadWindow(state)) {
+    SDL_Log("[ERROR] Unable to load window: %s\n", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
+  if (!loadRenderer(state)) {
+    SDL_Log("[ERROR] Unable to load renderer: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
@@ -58,25 +75,40 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   // reset buffer
   if (!SDL_RenderClear(state->renderer)) {
+    SDL_Log("[ERROR] Unable to clear renderer: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  // make updates, if necessary, and render to buffer
+  // make updates, if necessary
   if (!updatePosition(state)) {
+    SDL_Log("[ERROR] Unable to update position: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
   if (!updateOpacity(state)) {
+    SDL_Log("[ERROR] Unable to update opacity: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
-  if (!renderTexture(state)) {
+  if (!updateTexture(state)) {
+    SDL_Log("[ERROR] Unable to update texture: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  // draw buffer and show window, if hidden
+  // render entire texture to entire buffer
+  SDL_FRect *srcrect = NULL;
+  SDL_FRect *dstrect = NULL;
+  if (!SDL_RenderTexture(state->renderer, state->texture, srcrect, dstrect)) {
+    SDL_Log("[ERROR] Unable to render texture: %s\n", SDL_GetError());
+  }
+
+  // present buffer
   if (!SDL_RenderPresent(state->renderer)) {
+    SDL_Log("[ERROR] Unable to present renderer: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
+
+  // show window, if hidden
   if (!SDL_ShowWindow(state->window)) {
+    SDL_Log("[ERROR] Unable to show window: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
@@ -87,14 +119,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   AppState *state = (AppState *)appstate;
 
   switch (event->type) {
-    // application process was terminated
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
       break;
 
     case SDL_EVENT_KEY_DOWN:
       switch (event->key.key) {
-        // user wants to change the window opacity
         case SDLK_LCTRL:
         case SDLK_RCTRL:
           state->changeOpacity = true;
@@ -104,7 +134,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     case SDL_EVENT_KEY_UP:
       switch (event->key.key) {
-        // user finished changing the window opacity
         case SDLK_LCTRL:
         case SDLK_RCTRL:
           state->changeOpacity = false;
@@ -114,7 +143,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
       switch (event->button.button) {
-        // user wants to change the window position (drag)
+        // save relative mouse position before user starts dragging the window
         case SDL_BUTTON_LEFT:
           state->changePosition = true;
           state->relativeMousePosition.x = event->motion.x;
@@ -125,17 +154,15 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     case SDL_EVENT_MOUSE_BUTTON_UP:
       switch (event->button.button) {
-        // user finished changing the window position (drag)
         case SDL_BUTTON_LEFT:
           state->changePosition = false;
           break;
 
-        // user wants to quit the application
         case SDL_BUTTON_MIDDLE:
           return SDL_APP_SUCCESS;
           break;
 
-        // user wants to reset a window property to its default value
+        // reset a window property to its default value
         case SDL_BUTTON_RIGHT:
           if (state->changeOpacity) {
             state->requestedOpacity = state->defaultOpacity;
@@ -147,7 +174,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       break;
 
     case SDL_EVENT_MOUSE_MOTION:
-      // user wants to change the window position (drag)
+      // request a new position, if necessary
       if (state->changePosition) {
         SDL_Point offset = {
             event->motion.x - state->relativeMousePosition.x,
@@ -159,9 +186,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       break;
 
     case SDL_EVENT_MOUSE_WHEEL:
-      // user wants to change the window opacity
+      // request a new opacity, if necessary
+      //
       // we enforce upper and lower boundaries for a smooth experience as well
-      // as to avoid that the window becomes invisible and thus unreachable
+      // as to avoid that the window becomes invisible when changing opacity
       if (state->changeOpacity) {
         float factor = 0.1f;
         float newOpacity;
@@ -187,13 +215,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   AppState *state = (AppState *)appstate;
 
-  // if an SDL error occurred, log it
-  if (result == SDL_APP_FAILURE) {
-    fprintf(stderr, "[ERROR] %s\n", SDL_GetError());
-  }
-
   // free TTF resources and quit system
-  TTF_CloseFont(state->font);
+  if (state->font != NULL) {
+    TTF_CloseFont(state->font);
+  }
   TTF_Quit();
 
   // free SDL resources and quit system
