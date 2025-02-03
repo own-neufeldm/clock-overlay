@@ -19,7 +19,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   // allocate application state
   AppState *state = SDL_calloc(1, sizeof(AppState));
-  if (state != NULL) {
+  if (state == NULL) {
     SDL_Log("[ERROR] Unable to allocate app state: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
