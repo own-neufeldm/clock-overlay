@@ -96,8 +96,6 @@ bool loadWindow(AppState *state) {
 
   // set requested values equal to default values -> no update required
   state->requestedGeometry = state->defaultGeometry;
-  state->requestedOpacity = state->defaultOpacity;
-
   return true;
 }
 
@@ -133,22 +131,6 @@ bool updatePosition(AppState *state) {
 
   // udpate position
   return SDL_SetWindowPosition(state->window, rx, ry);
-}
-
-bool updateOpacity(AppState *state) {
-  // determine window opacity
-  float currentOpacity = SDL_GetWindowOpacity(state->window);
-  if (currentOpacity == -1.0f) {
-    return false;
-  }
-
-  // return if opacity does not need an update
-  if (currentOpacity == state->requestedOpacity) {
-    return true;
-  }
-
-  // update opacity
-  return SDL_SetWindowOpacity(state->window, state->requestedOpacity);
 }
 
 bool updateTexture(AppState *state) {

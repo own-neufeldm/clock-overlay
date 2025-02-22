@@ -36,9 +36,6 @@ Run the app with `.\build\clock-overlay.exe`.
 You can move the window by holding the left mouse button and moving the mouse. To reset the window
 to its default position, press the right mouse button. Press the middle mouse button to quit.
 
-Additionally, you can change the window's opacity by holding CTRL and scrolling the mouse wheel.
-Again, you can press the right mouse button, while holding CTRL this time, to reset the opacity.
-
 ## Attributions
 
 The following resources have been authored by other people:
