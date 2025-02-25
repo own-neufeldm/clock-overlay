@@ -79,15 +79,16 @@ bool loadWindow(AppState *state) {
   }
 
   // load window icon
-  SDL_Surface *surface = IMG_Load(state->iconFile);
-  if (surface == NULL) {
-    return false;
-  }
-  bool ok = SDL_SetWindowIcon(state->window, surface);
-  SDL_DestroySurface(surface);
-  if (!ok) {
-    return false;
-  }
+  printf("[WARNING] Due to unknown errors the window icon cannot be loaded.");
+  // SDL_Surface *surface = IMG_Load(state->iconFile);
+  // if (surface == NULL) {
+  //   return false;
+  // }
+  // bool ok = SDL_SetWindowIcon(state->window, surface);
+  // SDL_DestroySurface(surface);
+  // if (!ok) {
+  //   return false;
+  // }
 
   // normalize default position, if necessary
   if (!normalizeDefaultPosition(state)) {
