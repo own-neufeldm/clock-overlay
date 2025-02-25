@@ -7,7 +7,7 @@
 #include "app.h"
 
 static const char *NAME = "Clock Overlay";
-static const char *VERSION = "v2.3.0";
+static const char *VERSION = "v2.3.1";
 static const char *IDENTIFIER = "com.ownneufeldm.clockoverlay";
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
