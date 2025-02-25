@@ -13,5 +13,5 @@ target_link_libraries(
   "${CMAKE_PROJECT_NAME}" PRIVATE
   SDL3::SDL3-shared
   SDL3_image::SDL3_image-shared
-  SDL3_ttf::SDL3_ttf-shared
+  SDL3_ttf::SDL3_ttf
 )
