@@ -1,7 +1,17 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "dependencies": [
-    "sdl3",
-    "sdl3-image",
-    "sdl3-ttf"
+    {
+      "name": "sdl3"
+    },
+    {
+      "name": "sdl3-image",
+      "features": [
+        "png"
+      ]
+    },
+    {
+      "name": "sdl3-ttf"
+    }
   ]
 }
